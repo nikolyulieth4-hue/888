@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050811">
+    <title>ALGORITMIA: La Ilusión de la Autonomía</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050811;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --accent-green: #10b981;
+            --accent-cyan: #06b6d4;
+            --accent-red: #ef4444;
+            --accent-warning: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --text-main: #cbd5e1;
+            --text-bright: #f8fafc;
+            --border-color: #1e293b;
+            --glow-cyan: rgba(6, 182, 212, 0.4);
+            --glow-green: rgba(16, 185, 129, 0.4);
+            --font-mono: 'Fira Code', monospace;
+            --font-sans: 'Rajdhani', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 18px;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px var(--glow-cyan);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            position: relative;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header {
+            background: rgba(2, 6, 23, 0.9);
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .title-area h1 {
+            color: var(--accent-cyan);
+            font-size: 1.8rem;
+            font-family: var(--font-mono);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--glow-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-area p {
+            font-size: 0.95rem;
+            color: #64748b;
+            font-family: var(--font-mono);
+        }
+
+        .controls-and-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .audio-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .audio-btn:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--glow-cyan);
+        }
+
+        .status-panel {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            min-width: 250px;
+        }
+
+        .metric-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-family: var(--font-mono);
+            color: #94a3b8;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar-bg {
+            background-color: #0f172a;
+            height: 14px;
+            border-radius: 7px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, var(--accent-warning), var(--accent-cyan));
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.6s ease;
+            box-shadow: 0 0 10px var(--glow-cyan);
+        }
+
+        main {
+            padding: 35px;
+            flex-grow: 1;
+        }
+
+        .concept-tag {
+            display: inline-block;
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .narrative-box {
+            background: rgba(2, 6, 23, 0.6);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 25px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 30px;
+            font-size: 1.15rem;
+            color: var(--text-bright);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .quote-box {
+            font-style: italic;
+            color: #94a3b8;
+            border-left: 3px solid var(--accent-purple);
+            background: rgba(139, 92, 246, 0.05);
+            padding: 15px 20px;
+            margin: 20px 0 0 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 1rem;
+            font-family: var(--font-mono);
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .option-btn {
+            background: rgba(30, 41, 59, 0.5);
+            color: var(--text-bright);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.05rem;
+            font-family: var(--font-sans);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-cyan);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .option-btn:hover {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: var(--accent-cyan);
+            transform: translateX(6px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4), 0 0 15px var(--glow-cyan);
+        }
+
+        .option-btn:hover::before {
+            opacity: 1;
+        }
+
+        .option-btn .btn-title {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+
+        .feedback-card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 25px;
+        }
+
+        .feedback-card h3 {
+            color: var(--accent-warning);
+            margin-bottom: 12px;
+            font-family: var(--font-mono);
+            letter-spacing: 1px;
+        }
+
+        .reflection-questions {
+            background: rgba(2, 6, 23, 0.8);
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .reflection-questions ul {
+            padding-left: 20px;
+            margin-top: 12px;
+        }
+
+        .reflection-questions li {
+            margin-bottom: 10px;
+            color: #e2e8f0;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            color: #fff;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            margin-top: 25px;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--glow-green);
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--glow-green);
+        }
+
+        footer {
+            background: rgba(2, 6, 23, 0.95);
+            padding: 18px 30px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #64748b;
+            text-align: center;
+            font-family: var(--font-mono);
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--accent-warning);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                align-items: flex-start;
+                padding: 12px;
+            }
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 20px;
+            }
+            .title-area h1 {
+                font-size: 1.2rem;
+                letter-spacing: 0;
+            }
+            .title-area p {
+                font-size: 0.75rem;
+            }
+            .controls-and-status {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .audio-btn {
+                justify-content: center;
+            }
+            .status-panel {
+                min-width: 100%;
+            }
+            main {
+                padding: 22px 18px;
+            }
+            .narrative-box {
+                padding: 18px;
+                font-size: 1.05rem;
+            }
+            .option-btn {
+                padding: 16px;
+            }
+            .option-btn .btn-title {
+                font-size: 1.05rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="matrix-canvas" aria-hidden="true"></canvas>
+
+<div class="container">
+    <header>
+        <div class="title-area">
+            <h1><span aria-hidden="true">⚡</span> NEXUS-OS // AUDITORÍA</h1>
+            <p>Simulador de Autonomía Digital y Poder Gris</p>
+        </div>
+        <div class="controls-and-status">
+            <button class="audio-btn" id="music-toggle" type="button" onclick="toggleAudio()" aria-pressed="false" aria-label="Activar sintetizador">
+                <span id="audio-icon" aria-hidden="true">🔇</span> <span id="audio-txt">Sintetizador</span>
+            </button>
+            <div class="status-panel">
+                <div class="metric-title">
+                    <span>Soberanía Cognitiva</span>
+                    <span id="autonomy-val">50%</span>
+                </div>
+                <div class="progress-bar-bg" role="progressbar" aria-label="Soberanía cognitiva" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+                    <div id="autonomy-bar" class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-content" aria-live="polite">
+        <!-- Contenido dinámico mediante JavaScript -->
+    </main>
+
+    <footer>
+        Basado en los principios de Cristóbal Cobo en <em>"Acepto las Condiciones"</em> (2019)
+    </footer>
+</div>
+
+<script>
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    const fontSize = 14;
+    const chars = '011001010101101010101NEXUS10101POWER10101GREY0101';
+    let drops = [];
+
+    function resizeCanvas() {
+        const pixelRatio = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * pixelRatio;
+        canvas.height = window.innerHeight * pixelRatio;
+        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.height = `${window.innerHeight}px`;
+        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        const columns = Math.ceil(window.innerWidth / fontSize);
+        drops = Array.from({ length: columns }, (_, index) => drops[index] || 1);
+    }
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(5, 8, 17, 0.08)';
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.fillStyle = '#06b6d4';
+        ctx.font = `${fontSize}px monospace`;
+
+        for (let index = 0; index < drops.length; index++) {
+            const text = chars.charAt(Math.floor(Math.random() * chars.length));
+            ctx.fillText(text, index * fontSize, drops[index] * fontSize);
+            if (drops[index] * fontSize > window.innerHeight && Math.random() > 0.975) {
+                drops[index] = 0;
+            }
+            drops[index]++;
+        }
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    window.setInterval(drawMatrix, 40);
+
+    let audioCtx = null;
+    let isPlaying = false;
+    let mainOsc = null;
+    let gainNode = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playBeep(freq = 440, type = 'sine', duration = 0.1) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function toggleAudio() {
+        initAudio();
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
+        const button = document.getElementById('music-toggle');
+        if (!isPlaying) {
+            mainOsc = audioCtx.createOscillator();
+            gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            mainOsc.type = 'sawtooth';
+            mainOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(220, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            mainOsc.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            mainOsc.start();
+            isPlaying = true;
+            document.getElementById('audio-icon').textContent = '🔊';
+            document.getElementById('audio-txt').textContent = 'Ambiente ON';
+            button.setAttribute('aria-pressed', 'true');
+            button.setAttribute('aria-label', 'Desactivar sintetizador');
+        } else {
+            if (mainOsc) {
+                mainOsc.stop();
+                mainOsc.disconnect();
+            }
+            isPlaying = false;
+            document.getElementById('audio-icon').textContent = '🔇';
+            document.getElementById('audio-txt').textContent = 'Sintetizador';
+            button.setAttribute('aria-pressed', 'false');
+            button.setAttribute('aria-label', 'Activar sintetizador');
+        }
+    }
+
+    let currentAutonomy = 50;
+
+    const storyData = {
+        start: {
+            concept: "FASE 1: El Poder Gris y la Configuración Predeterminada",
+            text: "Te han asignado la dirección del curso universitario en la metrópoli de Veridiana. La administración ha implementado <strong>NEXUS-OS</strong>, una infraestructura algorítmica opaca que promete 'optimizar y personalizar' el aprendizaje de tus estudiantes prediciendo sus conductas a través de su huella digital.",
+            quote: "'Eligiendo no elegir es lo que hacemos la mayoría cuando aceptamos los servicios en línea de forma predeterminada... transferimos esas atribuciones a los sistemas digitales.' — Cristóbal Cobo",
+            options: [
+                {
+                    title: "Opción A: Aceptar los parámetros predeterminados de NEXUS-OS",
+                    desc: "Permitir que el algoritmo filtre los contenidos, organice los grupos y fije los ritmos de clase automáticamente para ganar eficiencia.",
+                    autonomyDelta: -20,
+                    nextStep: "node_default"
+                },
+                {
+                    title: "Opción B: Auditar el sistema y exigir transparencia algorítmica",
+                    desc: "Rechazar la configuración por defecto. Exigir visibilidad sobre los datos extraídos y diseñar una curaduría pedagógica crítica e híbrida.",
+                    autonomyDelta: 20,
+                    nextStep: "node_audit"
+                }
+            ]
+        },
+
+        node_default: {
+            concept: "FASE 2: La Sedación de los Smartphone Zombies",
+            text: "Aceptaste la configuración predeterminada. A las pocas semanas, tus estudiantes están satisfechos: el sistema solo les muestra videos breves y resúmenes adaptados a sus sesgos de preferencia. Sin embargo, en las discusiones colectivas muestran incapacidad para sostener la atención en textos largos o tolerar posturas complejas. Se han sumergido en la pasividad del 'Smartphone Zombie'.",
+            quote: "'En vez de personas con más poder, más bien vemos cada vez más smartphone zombies preocupados por estar al día... anestesiados ante un teléfono que nos llena de microactualizaciones.' — Cristóbal Cobo",
+            options: [
+                {
+                    title: "Opción A1: Delegar la evaluación pedagógica a la Inteligencia Artificial",
+                    desc: "Permitir que la IA califique el nivel de compromiso y comportamiento de los estudiantes en tiempo real de forma automatizada.",
+                    autonomyDelta: -25,
+                    nextStep: "final_servidumbre"
+                },
+                {
+                    title: "Opción A2: Intervenir manualmente con talleres de lectura crítica analógica",
+                    desc: "Ruptura parcial: Establecer 2 horas semanales obligatorias sin pantallas para leer documentos físicos y ejercitar la concentración.",
+                    autonomyDelta: 10,
+                    nextStep: "final_hibrido"
+                }
+            ]
+        },
+
+        node_audit: {
+            concept: "FASE 2: Desobediencia Tecnológica y Resistencia",
+            text: "Al rechazar la automatización por defecto, NEXUS-OS emite una alerta administrativa acusándote de 'ineficiencia operativa'. Sin embargo, tus estudiantes han comenzado a descubrir cómo la plataforma comercializa su atención. Te piden liderar una alternativa real.",
+            quote: "'Aprender a pensar autónomamente (sin prótesis digitales) guardará relación con ampliar los espacios para la desobediencia tecnológica y de reflexión crítica.' — Cristóbal Cobo",
+            options: [
+                {
+                    title: "Opción B1: Decretar un 'Apagón Digital Total' e incondicional",
+                    desc: "Prohibir tajantemente cualquier teléfono o computadora dentro de la institución pedagógica.",
+                    autonomyDelta: -10,
+                    nextStep: "final_tecnofobia"
+                },
+                {
+                    title: "Opción B2: Diseñar una estrategia de Desobediencia Tecnológica y Ofuscación",
+                    desc: "Enseñar a los estudiantes a alimentar el algoritmo con datos falsos (ofuscación) y utilizar redes descentralizadas y éticas para estudiar.",
+                    autonomyDelta: 25,
+                    nextStep: "final_soberania"
+                }
+            ]
+        },
+
+        final_servidumbre: {
+            isFinal: true,
+            title: "FINAL 1: Servidumbre Digital Absoluta",
+            concept: "Resultado: Feudalismo Digital",
+            text: "Has perdido el control pedagógico. Te has convertido en un ejecutor administrativo del 'Poder Gris'. Tus estudiantes no desarrollan pensamiento crítico y aceptan pasivamente las condiciones impuestas por las plataformas.",
+            analysis: "Al renunciar a la curaduría y decisión pedagógica por simple practicidad o rapidez, se profundiza la asimetría de información identificada por Cobo. El aula se vuelve un espacio de extracción de comportamiento.",
+            questions: [
+                "¿En qué actividades de tu cotidianeidad educativa delegas decisiones reflexivas en favor de algoritmos automáticos?",
+                "¿Qué consecuencias sociales genera una ciudadanía educada únicamente por entornos algorítmicos optimizados para la permanencia?"
+            ]
+        },
+
+        final_hibrido: {
+            isFinal: true,
+            title: "FINAL 2: Control Híbrido y Resistencia Tenso-Pasiva",
+            concept: "Resultado: Resistencia Parcial",
+            text: "Creaste pequeños refugios analógicos de lectura, pero la infraestructura central de tu institución continúa operando bajo la vigilancia extractiva de la plataforma.",
+            analysis: "Representa el estado de muchas instituciones actuales: esfuerzos aislados de desconexión sin transformar las reglas estructurales del ecosistema digital. Es un avance, pero insuficiente para lograr una verdadera soberanía cognitiva.",
+            questions: [
+                "¿Alcanza con proponer 'pausas digitales' o se requiere enseñar a abrir la 'caja negra' de la tecnología?",
+                "¿Cómo abordar la incomodidad o ansiedad que experimentan los estudiantes cuando enfrentan el silencio digital?"
+            ]
+        },
+
+        final_tecnofobia: {
+            isFinal: true,
+            title: "FINAL 3: Tecnofobia y Desconexión Inoperante",
+            concept: "Resultado: Aislamiento Neoluddita",
+            text: "El apagón absoluto protegió el aula durante el semestre, pero dejó a los estudiantes vulnerables e inadaptados frente al ecosistema hiperconectado del mundo laboral y social fuera de la universidad.",
+            analysis: "Cobo recalca que el reto no consiste en la prohibición ingenua ni en la nostalgia analógica, sino en adquirir competencias críticas para intervenir activamente la tecnología.",
+            questions: [
+                "¿Por qué la simple prohibición del teléfono en las aulas suele ser ineficaz a largo plazo?",
+                "¿Cuál es la diferencia entre usar tecnología y comprender pedagógicamente cómo la tecnología nos moldea?"
+            ]
+        },
+
+        final_soberania: {
+            isFinal: true,
+            title: "FINAL 4: Soberanía Cognitiva y Ciudadanía Crítica",
+            concept: "Resultado: Desobediencia Tecnológica Emancipadora",
+            text: "¡Excelente logro! Transformaste la clase en un laboratorio de auditoría sociotécnica. Tus estudiantes comprenden los mecanismos de la economía de la atención, protegen sus datos y usan las herramientas digitales de forma ética y con propósito.",
+            analysis: "Has materializado los postulados de 'Acepto las Condiciones'. Promoviste la autonomía, el pensamiento crítico y la capacidad de decir 'no' a las configuraciones predeterminadas de las grandes plataformas.",
+            questions: [
+                "¿Qué proyecto o propuesta de alfabetización digital crítica podrías implementar en tu contexto educativo real?",
+                "¿Cómo enseñarías a otros educadores a auditar los algoritmos y términos de servicio de las herramientas que usan en clase?"
+            ]
+        }
+    };
+
+    function updateUI() {
+        const autonomyVal = document.getElementById('autonomy-val');
+        const autonomyBar = document.getElementById('autonomy-bar');
+        const progressBar = document.querySelector('[role="progressbar"]');
+        currentAutonomy = Math.max(0, Math.min(100, currentAutonomy));
+        autonomyVal.textContent = `${currentAutonomy}%`;
+        autonomyBar.style.width = `${currentAutonomy}%`;
+        progressBar.setAttribute('aria-valuenow', String(currentAutonomy));
+
+        if (currentAutonomy < 35) {
+            autonomyBar.style.background = 'linear-gradient(90deg, #dc2626, #ef4444)';
+        } else if (currentAutonomy < 70) {
+            autonomyBar.style.background = 'linear-gradient(90deg, #d97706, #f59e0b)';
+        } else {
+            autonomyBar.style.background = 'linear-gradient(90deg, #059669, #10b981)';
+        }
+    }
+
+    function renderNode(nodeKey) {
+        const app = document.getElementById('app-content');
+        const data = storyData[nodeKey];
+        if (!data) return;
+
+        if (data.isFinal) {
+            playBeep(220, 'sawtooth', 0.3);
+            app.innerHTML = `
+                <span class="concept-tag">${data.concept}</span>
+                <div class="narrative-box">
+                    <h2 style="color:var(--accent-cyan); margin-bottom:12px; font-family:var(--font-mono);">${data.title}</h2>
+                    <p>${data.text}</p>
+                </div>
+                <div class="feedback-card">
+                    <h3>ANÁLISIS PEDAGÓGICO DE TUS DECISIONES</h3>
+                    <p style="margin-bottom:15px; color:#cbd5e1;">${data.analysis}</p>
+                    <div class="reflection-questions">
+                        <strong style="color:var(--accent-warning); font-family:var(--font-mono);">Preguntas de Reflexión Didáctica:</strong>
+                        <ul>${data.questions.map(question => `<li>${question}</li>`).join('')}</ul>
+                    </div>
+                </div>
+                <button class="restart-btn" type="button" onclick="resetApp()">Reiniciar Auditoría</button>
+            `;
+        } else {
+            app.innerHTML = `
+                <span class="concept-tag">${data.concept}</span>
+                <div class="narrative-box">
+                    <p>${data.text}</p>
+                    ${data.quote ? `<div class="quote-box">${data.quote}</div>` : ''}
+                </div>
+                <div class="options-container">
+                    ${data.options.map(option => `
+                        <button class="option-btn" type="button" onclick="makeChoice(${option.autonomyDelta}, '${option.nextStep}')">
+                            <span class="btn-title">${option.title}</span>
+                            <span>${option.desc}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        updateUI();
+    }
+
+    function makeChoice(delta, nextNode) {
+        initAudio();
+        playBeep(delta > 0 ? 587.33 : 293.66, 'sine', 0.15);
+        currentAutonomy += delta;
+        renderNode(nextNode);
+    }
+
+    function resetApp() {
+        initAudio();
+        playBeep(440, 'triangle', 0.2);
+        currentAutonomy = 50;
+        renderNode('start');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => renderNode('start'));
+</script>
+
+</body>
+</html>
